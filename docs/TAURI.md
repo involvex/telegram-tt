@@ -8,7 +8,7 @@ Since it's based on native OS WebView, you must compile application separately f
 
 - [Installation](#installation)
 - [Upgrading dependencies](#upgrading-dependencies)
-- [NPM scripts](#npm-scripts)
+- [Scripts](#scripts)
 - [Implementation specifics](#implementation-specifics)
   - [Accessing the Tauri API](#accessing-the-tauri-api)
   - [Custom header on MacOS](#custom-header-on-macos)
@@ -30,14 +30,14 @@ To run Tauri locally, ensure that [Rust is installed](https://tauri.app/start/pr
 
 ```bash
 # Get outdated module
-npm outdated @tauri-apps/{MODULE} # e.g. npm outdated @tauri-apps/cli
+bun outdated @tauri-apps/{MODULE} # e.g. bun outdated @tauri-apps/cli
 # or list all available versions
 npm view @tauri-apps/{MODULE} versions -json
 
 # Install a specific version
-npm install @tauri-apps/cli@{VERSION}
+bun add @tauri-apps/cli@{VERSION}
 # or install the latest version
-npm install @tauri-apps/cli@latest
+bun add @tauri-apps/cli@latest
 ```
 
 - To upgrade Rust (Cargo) modules, run:
@@ -55,11 +55,11 @@ cargo upgrade
 
 For details on upgrading Tauri dependencies, refer to the [official documentation](https://tauri.app/develop/updating-dependencies/).
 
-## NPM scripts
+## Scripts
 
-- `npm run tauri:dev` — run Tauri in development mode.
+- `bun run tauri:dev` — run Tauri in development mode.
 
-- `npm run tauri` — placeholder, which allows you to run [Tauri CLI](https://v2.tauri.app/reference/cli/) commands with `npm run tauri {COMMAND}`.
+- `bun run tauri` — placeholder, which allows you to run [Tauri CLI](https://v2.tauri.app/reference/cli/) commands with `bun run tauri {COMMAND}`.
 
 ## Implementation specifics
 

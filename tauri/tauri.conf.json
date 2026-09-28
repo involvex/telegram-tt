@@ -6,7 +6,7 @@
     }
   },
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "bun run dev",
     "devUrl": "https://localhost:1234",
     "frontendDist": "https://localhost:1234",
     "removeUnusedCommands": true
