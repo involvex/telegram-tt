@@ -11,11 +11,11 @@
     "dev:mocked": "cross-env APP_ENV=test APP_MOCKED_CLIENT=1 vite --mode development --port 1235",
     "build:dev": "vite build --mode development",
     "build:staging": "cross-env APP_ENV=staging npm run build:dev",
-    "build:mocked": "cross-env APP_ENV=test APP_MOCKED_CLIENT=1 npm run build:dev",
+    "build:mocked": "cross-env APP_ENV=test APP_MOCKED_CLIENT=1 bun run build:dev",
     "build:production": "vite build",
     "build:stats": "cross-env BUNDLE_STATS=1 vite build",
     "build:stats:visualizer": "cross-env BUNDLE_STATS_VISUALIZER=1 vite build",
-    "web:release:production": "npm i && npm run build:production && git add -A && git commit -a -m '[Build]' --no-verify && git push",
+    "web:release:production": "bun i && bun run build:production && git add -A && git commit -a -m '[Build]' --no-verify && git push",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
@@ -24,8 +24,8 @@
     "check:css": "stylelint \"**/*.{css,scss}\" --cache --cache-location .cache/.stylelintcache",
     "fix:ts": "tsc && eslint --cache --cache-location .cache/.eslintcache --fix",
     "fix:css": "stylelint \"**/*.{css,scss}\" --cache --cache-location .cache/.stylelintcache --fix",
-    "check": "npm run check:ts && npm run check:css",
-    "fix": "npm run fix:ts && npm run fix:css",
+    "check": "bun run check:ts && bun run check:css",
+    "fix": "bun run fix:ts && bun run fix:css",
     "tl:rehash": "node ./dev/tlHash.js",
     "gramjs:tl": "tsx ./src/lib/gramjs/tl/generateModules.ts",
     "lang:ts": "tsx ./dev/generateLangTypes.js",
@@ -39,7 +39,8 @@
   },
   "engines": {
     "node": "^24.11 || ^26",
-    "npm": "^11 || ^12"
+    "npm": "^11 || ^12",
+    "bun": "^1.3.1"
   },
   "lint-staged": {
     "*.{ts,tsx,js}": "eslint --cache --cache-location .cache/.eslintcache --fix",
@@ -67,6 +68,7 @@
     "@types/react": "^19.2.17",
     "@typescript-eslint/eslint-plugin": "^8.62.0",
     "@typescript-eslint/parser": "^8.62.0",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
     "autoprefixer": "^10.5.2",
     "cross-env": "^10.1.0",
     "eslint": "^10.6.0",
@@ -158,7 +160,12 @@
   },
   "trustedDependencies": [
     "@parcel/watcher",
+    "bufferutil",
     "core-js",
-    "unrs-resolver"
+    "es5-ext",
+    "esbuild",
+    "ttf2woff2",
+    "unrs-resolver",
+    "utf-8-validate"
   ]
 }

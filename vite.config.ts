@@ -1,4 +1,6 @@
+import basicSsl from '@vitejs/plugin-basic-ssl';
 import { readFileSync } from 'fs';
+import { networkInterfaces } from 'os';
 import { dirname, resolve } from 'path';
 import type { NormalizedOutputOptions, OutputBundle, PluginContext } from 'rolldown';
 import { bundleStats } from 'rollup-plugin-bundle-stats';
@@ -65,7 +67,7 @@ type BundleReportHook = (
   isWrite: boolean,
 ) => void | Promise<void>;
 
-export default defineConfig(({ mode }): UserConfig => {
+export default defineConfig(({ mode }: { mode: string }): UserConfig => {
   const env = loadEnv(mode, process.cwd(), '');
   setViteEnv(env);
   const {
@@ -87,6 +89,7 @@ export default defineConfig(({ mode }): UserConfig => {
   const manifest = isProductionApp ? 'site.webmanifest' : 'site_dev.webmanifest';
   const csp = buildCsp(appEnv);
   const isDevelopmentMode = mode === 'development';
+  const httpsConfig = getHttpsConfig(httpsCertPath, httpsKeyPath);
   const telegramApiId = env.TELEGRAM_API_ID || '';
   const telegramApiHash = env.TELEGRAM_API_HASH || '';
   const workerReportBundles: OutputBundle[] = [];
@@ -105,6 +108,10 @@ export default defineConfig(({ mode }): UserConfig => {
           ignored: '**/*',
         },
       },
+    }),
+    isDevelopmentMode && !httpsConfig && basicSsl({
+      name: 'telegram-tt',
+      domains: collectDevHttpsDomains(),
     }),
     isDevelopmentMode && watchAndRun([
       {
@@ -132,7 +139,7 @@ export default defineConfig(({ mode }): UserConfig => {
     plugins.push(createBundleReportPlugin(visualizer((outputOptions) => ({
       filename: resolve(
         DIR_NAME,
-        outputOptions.dir,
+        outputOptions.dir || '',
         BUNDLE_STATS_OUT_DIR,
         BUNDLE_STATS_VISUALIZER_FILE,
       ),
@@ -198,12 +205,10 @@ export default defineConfig(({ mode }): UserConfig => {
     },
     resolve: {
       tsconfigPaths: true,
-      alias: [
-        ...(appMockedClient === '1' ? [{
-          find: /^(?:\.\/client|(?:\.\.\/)*lib\/gramjs\/client)\/TelegramClient$/,
-          replacement: resolve(DIR_NAME, 'src/lib/gramjs/client/MockClient.ts'),
-        }] : []),
-      ],
+      alias: (appMockedClient === '1' ? [{
+        find: /^(?:\.\/client|(?:\.\.\/)*lib\/gramjs\/client)\/TelegramClient$/,
+        replacement: resolve(DIR_NAME, 'src/lib/gramjs/client/MockClient.ts'),
+      }] : []),
     },
     css: {
       modules: {
@@ -219,17 +224,18 @@ export default defineConfig(({ mode }): UserConfig => {
         'Content-Security-Policy': csp,
         'Service-Worker-Allowed': '/',
       },
-      https: getHttpsConfig(httpsCertPath, httpsKeyPath),
-      warmup: {
-        clientFiles: DEV_BUNDLE_WARMUP_CLIENT_FILES,
-      },
+      // Custom mkcert paths; otherwise @vitejs/plugin-basic-ssl enables HTTPS in development
+      ...(httpsConfig ? { https: httpsConfig } : {}),
       watch: {
         ignored: DEV_SERVER_WATCH_IGNORES,
+      },
+      warmup: {
+        clientFiles: DEV_BUNDLE_WARMUP_CLIENT_FILES,
       },
     },
     build: {
       sourcemap: true,
-      assetsInlineLimit: (filePath) => (IMAGE_ASSET_RE.test(filePath) ? false : undefined),
+      assetsInlineLimit: (filePath: string) => (IMAGE_ASSET_RE.test(filePath) ? false : undefined),
     },
     worker: {
       plugins: shouldCollectWorkerReportBundles ? () => [
@@ -248,7 +254,7 @@ export default defineConfig(({ mode }): UserConfig => {
 function createBundleReportPlugin(plugin: BundleReportPlugin, workerReportBundles: OutputBundle[]): Plugin {
   return {
     name: `${plugin.name}${BUNDLE_REPORT_PLUGIN_SUFFIX}`,
-    async generateBundle(outputOptions, bundle, isWrite) {
+    async generateBundle(outputOptions: NormalizedOutputOptions, bundle: OutputBundle, isWrite: boolean) {
       const generateBundle = parseBundleReportHook(plugin.generateBundle);
 
       await generateBundle?.call(
@@ -264,7 +270,7 @@ function createBundleReportPlugin(plugin: BundleReportPlugin, workerReportBundle
 function createWorkerBundleCollectorPlugin(workerReportBundles: OutputBundle[]): Plugin {
   return {
     name: WORKER_BUNDLE_COLLECTOR_PLUGIN_NAME,
-    generateBundle(_outputOptions, bundle) {
+    generateBundle(_outputOptions: NormalizedOutputOptions, bundle: OutputBundle) {
       workerReportBundles.push({ ...bundle });
     },
   };
@@ -335,4 +341,18 @@ function getHttpsConfig(httpsCertPath: string, httpsKeyPath: string) {
     cert: readFileSync(httpsCertPath),
     key: readFileSync(httpsKeyPath),
   };
+}
+
+function collectDevHttpsDomains() {
+  const domains = new Set(['localhost', '127.0.0.1', '::1']);
+
+  Object.values(networkInterfaces()).forEach((entries) => {
+    entries?.forEach((entry) => {
+      if (entry.family === 'IPv4' || entry.family === 4) {
+        domains.add(entry.address);
+      }
+    });
+  });
+
+  return [...domains];
 }

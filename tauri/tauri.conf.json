@@ -7,8 +7,8 @@
   },
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1234",
-    "frontendDist": "http://localhost:1234",
+    "devUrl": "https://localhost:1234",
+    "frontendDist": "https://localhost:1234",
     "removeUnusedCommands": true
   },
   "plugins": {

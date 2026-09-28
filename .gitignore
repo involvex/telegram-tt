@@ -12,4 +12,13 @@ dev/perf/screenshot*
 .github/workflows/*
 !.github/workflows/package-and-publish.yml
 
-dist/
+dist/*
+.cline
+
+# Local HTTPS certs (bunx mkcert)
+certs/
+public/dev-ca.crt
+*.pem
+*.key
+ca.crt
+cert.crt
