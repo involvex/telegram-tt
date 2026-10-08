@@ -1,4 +1,28 @@
+use std::fs;
+use std::path::Path;
+
+fn load_dotenv() {
+  let project_root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+  let env_path = project_root.join(".env");
+
+  if let Ok(content) = fs::read_to_string(env_path) {
+    for line in content.lines() {
+      let line = line.trim();
+      if line.is_empty() || line.starts_with('#') {
+        continue;
+      }
+      if let Some((key, value)) = line.split_once('=') {
+        let key = key.trim();
+        let value = value.trim();
+        std::env::set_var(key, value);
+      }
+    }
+  }
+}
+
 fn main() {
+  load_dotenv();
+
   tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
     tauri_build::AppManifest::new().commands(&[
       "mark_title_bar_overlay",

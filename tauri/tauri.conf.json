@@ -7,8 +7,9 @@
   },
   "build": {
     "beforeDevCommand": "bun run dev",
+    "beforeBuildCommand": "bun run build:production",
     "devUrl": "https://localhost:1234",
-    "frontendDist": "https://localhost:1234",
+    "frontendDist": "../dist",
     "removeUnusedCommands": true
   },
   "plugins": {
@@ -41,11 +42,7 @@
     },
     "resources": [],
     "shortDescription": "",
-    "targets": [
-      "app",
-      "nsis",
-      "appimage"
-    ],
+    "targets": ["app", "nsis", "appimage"],
     "windows": {
       "digestAlgorithm": "sha256",
       "nsis": {

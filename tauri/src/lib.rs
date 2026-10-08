@@ -72,7 +72,7 @@ pub const DEFAULT_WINDOW_TITLE: &str = match std::option_env!("APP_TITLE") {
 
 pub const BASE_URL: &str = match std::option_env!("BASE_URL") {
   Some(url) => url,
-  None => "http://localhost:1234",
+  None => "",
 };
 
 pub const WITH_UPDATER: &str = match std::option_env!("WITH_UPDATER") {
@@ -323,12 +323,20 @@ pub(crate) fn open_new_window(
   url: String,
 ) -> Result<tauri::WebviewWindow, String> {
   let base_url = Url::parse(BASE_URL).map_err(|err| format!("Invalid base URL: {err}"))?;
-  let url = resolve_app_url(&url, &base_url).ok_or_else(|| format!("Disallowed app URL: {url}"))?;
+  let url = if BASE_URL.is_empty() {
+    if url.is_empty() {
+      "index.html".to_string()
+    } else {
+      url
+    }
+  } else {
+    resolve_app_url(&url, &base_url).ok_or_else(|| format!("Disallowed app URL: {url}"))?.to_string()
+  };
   let window_label = Uuid::new_v4().to_string();
   let new_window_builder = tauri::WebviewWindowBuilder::new(
     &app,
     window_label.clone(),
-    tauri::WebviewUrl::App(url.to_string().into()),
+    tauri::WebviewUrl::App(url.into()),
   )
   .additional_browser_args("--autoplay-policy=no-user-gesture-required")
   .fullscreen(false)
@@ -341,7 +349,13 @@ pub(crate) fn open_new_window(
     "window.tauri = {{ version: '{}' }};",
     env!("CARGO_PKG_VERSION")
   ))
-  .on_navigation(move |url| is_allowed_app_url(url, &base_url))
+  .on_navigation(move |url| {
+    if BASE_URL.is_empty() {
+      true
+    } else {
+      is_allowed_app_url(url, &base_url)
+    }
+  })
   .on_download(|window, event| {
     match event {
       #[allow(unused_variables)]
