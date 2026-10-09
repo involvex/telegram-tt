@@ -17,6 +17,14 @@ val tauriProperties = Properties().apply {
 android {
     compileSdk = 37
     namespace = "org.telegram.TelegramAirBeta"
+    signingConfigs {
+        create("tauriDebug") {
+            storeFile = file("${System.getProperty("user.home")}/.android/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
         applicationId = "org.telegram.TelegramAirBeta"
@@ -39,6 +47,7 @@ android {
             }
         }
         getByName("release") {
+            signingConfig = signingConfigs.getByName("tauriDebug")
             optimization {
                enable = true
             }
