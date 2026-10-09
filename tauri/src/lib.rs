@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
 use serde_json::json;
@@ -6,11 +5,16 @@ use tauri::{Emitter, LogicalPosition, Manager, webview::DownloadEvent};
 use url::Url;
 use uuid::Uuid;
 
+#[cfg(not(target_os = "android"))]
+use std::collections::HashMap;
+
 mod deeplink;
 use deeplink::Deeplink;
 
+#[cfg(not(target_os = "android"))]
 mod tray;
 mod window;
+#[cfg(not(target_os = "android"))]
 use crate::window::{WINDOW_STATES, WindowState};
 
 #[cfg(target_os = "macos")]
@@ -102,41 +106,48 @@ pub(crate) fn save_window_url(app: &tauri::AppHandle, window_label: &str) {
 
 pub fn run() {
   let app = tauri::Builder::default()
-    .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-      let active_windows = app.windows();
-      if active_windows.len() >= 1 {
-        let window = active_windows.values().next().unwrap();
-        window.set_focus().unwrap_or_default();
-      } else {
-        open_new_window(app.clone(), BASE_URL.to_string()).unwrap();
-      }
-    }))
     .plugin(tauri_plugin_os::init())
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_notification::init())
     .plugin(tauri_plugin_log::Builder::default().build())
-    .plugin(tauri_plugin_window_state::Builder::default().build())
     .plugin(tauri_plugin_deep_link::init())
     .plugin(tauri_plugin_process::init());
 
+  #[cfg(not(target_os = "android"))]
+  let app = app.plugin(tauri_plugin_window_state::Builder::default().build());
+
+  #[cfg(not(target_os = "android"))]
+  let app = app.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+    let active_windows = app.windows();
+    if active_windows.len() >= 1 {
+      let window = active_windows.values().next().unwrap();
+      window.set_focus().unwrap_or_default();
+    } else {
+      open_new_window(app.clone(), BASE_URL.to_string()).unwrap();
+    }
+  }));
+
   let app = app.on_window_event(|window, event| match event {
     tauri::WindowEvent::CloseRequested { api, .. } => {
-      let active_windows = window.app_handle().windows();
+      #[cfg(not(target_os = "android"))]
+      {
+        let active_windows = window.app_handle().windows();
 
-      if active_windows.len() == 1 {
-        // Save current URL before hiding the last window
-        save_window_url(&window.app_handle(), window.label());
+        if active_windows.len() == 1 {
+          // Save current URL before hiding the last window
+          save_window_url(&window.app_handle(), window.label());
 
-        #[cfg(target_os = "macos")]
-        window.app_handle().hide().unwrap_or_default();
-        #[cfg(not(target_os = "macos"))]
-        window.hide().unwrap_or_default();
-        api.prevent_close();
+          #[cfg(target_os = "macos")]
+          window.app_handle().hide().unwrap_or_default();
+          #[cfg(not(target_os = "macos"))]
+          window.hide().unwrap_or_default();
+          api.prevent_close();
+        }
       }
     }
+    #[cfg(target_os = "macos")]
     tauri::WindowEvent::ThemeChanged(_) => {
-      #[cfg(target_os = "macos")]
       if let Some(base_window) = window.app_handle().get_window(window.label()) {
         if let Ok(mut states) = WINDOW_STATES.lock() {
           if let Some(state) = states.get_mut(window.label()) {
@@ -160,6 +171,7 @@ pub fn run() {
       }
     }
     tauri::WindowEvent::Destroyed => {
+      #[cfg(not(target_os = "android"))]
       if let Ok(mut states) = WINDOW_STATES.lock() {
         states.remove(window.label());
       }
@@ -185,6 +197,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())?;
     }
 
+    #[cfg(not(target_os = "android"))]
     crate::tray::TrayManager::init(app.handle().clone())?;
 
     Ok(())
@@ -193,9 +206,12 @@ pub fn run() {
   let app = app.invoke_handler(tauri::generate_handler![
     mark_title_bar_overlay,
     set_notifications_count,
+    #[cfg(not(target_os = "android"))]
     set_window_title,
+    #[cfg(not(target_os = "android"))]
     open_new_window_cmd,
     save_current_url,
+    #[cfg(not(target_os = "android"))]
     set_menu_translations
   ]);
 
@@ -283,15 +299,18 @@ fn set_notifications_count(
     app_state.is_muted = is_muted;
   }
 
+  #[cfg(not(target_os = "android"))]
   crate::tray::set_notifications_count(&window, amount, is_muted);
 }
 
 #[tauri::command]
+#[cfg(not(target_os = "android"))]
 fn set_menu_translations(translations: HashMap<String, String>) {
   crate::tray::set_menu_translations(translations);
 }
 
 #[tauri::command]
+#[cfg(not(target_os = "android"))]
 fn set_window_title(window: tauri::WebviewWindow, title: String) {
   if let Ok(mut states) = WINDOW_STATES.lock() {
     if let Some(state) = states.get_mut(window.label()) {
@@ -304,6 +323,7 @@ fn set_window_title(window: tauri::WebviewWindow, title: String) {
 }
 
 #[tauri::command]
+#[cfg(not(target_os = "android"))]
 async fn open_new_window_cmd(app: tauri::AppHandle, url: String) -> bool {
   open_new_window(app, url).is_ok()
 }
@@ -338,54 +358,58 @@ pub(crate) fn open_new_window(
     window_label.clone(),
     tauri::WebviewUrl::App(url.into()),
   )
-  .additional_browser_args("--autoplay-policy=no-user-gesture-required")
-  .fullscreen(false)
-  .resizable(true)
-  .title(DEFAULT_WINDOW_TITLE)
-  .inner_size(WINDOW_WIDTH, WINDOW_HEIGHT)
-  .min_inner_size(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
-  .disable_drag_drop_handler() // Required for Drag & Drop on Windows
   .initialization_script(&format!(
     "window.tauri = {{ version: '{}' }};",
     env!("CARGO_PKG_VERSION")
-  ))
-  .on_navigation(move |url| {
-    if BASE_URL.is_empty() {
-      true
-    } else {
-      is_allowed_app_url(url, &base_url)
-    }
-  })
-  .on_download(|window, event| {
-    match event {
-      #[allow(unused_variables)]
-      DownloadEvent::Requested { destination, .. } => {
-        // On macOS, Webview does not provide basic download logic
-        #[cfg(target_os = "macos")]
-        if let Some(filename) = destination.file_name() {
-          if let Ok(downloads_dir) = window.app_handle().path().download_dir() {
-            let new_destination = downloads_dir.join(filename);
-            *destination = new_destination;
+  ));
+
+  // Desktop-only builder methods
+  #[cfg(not(target_os = "android"))]
+  let new_window_builder = new_window_builder
+    .additional_browser_args("--autoplay-policy=no-user-gesture-required")
+    .resizable(true)
+    .title(DEFAULT_WINDOW_TITLE)
+    .inner_size(WINDOW_WIDTH, WINDOW_HEIGHT)
+    .min_inner_size(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
+    .disable_drag_drop_handler() // Required for Drag & Drop on Windows
+    .on_navigation(move |url| {
+      if BASE_URL.is_empty() {
+        true
+      } else {
+        is_allowed_app_url(url, &base_url)
+      }
+    })
+    .on_download(|window, event| {
+      match event {
+        #[allow(unused_variables)]
+        DownloadEvent::Requested { destination, .. } => {
+          // On macOS, Webview does not provide basic download logic
+          #[cfg(target_os = "macos")]
+          if let Some(filename) = destination.file_name() {
+            if let Ok(downloads_dir) = window.app_handle().path().download_dir() {
+              let new_destination = downloads_dir.join(filename);
+              *destination = new_destination;
+            }
           }
         }
-      }
-      DownloadEvent::Finished { url, success, .. } => {
-        window
-          .emit_to(
-            window.label(),
-            "download-finished",
-            json!({
-              "url": url.to_string(),
-              "success": success
-            }),
-          )
-          .unwrap_or_default();
-      }
-      _ => {}
-    };
-    true
-  });
+        DownloadEvent::Finished { url, success, .. } => {
+          window
+            .emit_to(
+              window.label(),
+              "download-finished",
+              json!({
+                "url": url.to_string(),
+                "success": success
+              }),
+            )
+            .unwrap_or_default();
+        }
+        _ => {}
+      };
+      true
+    });
 
+  #[cfg(not(target_os = "android"))]
   if let Ok(mut states) = WINDOW_STATES.lock() {
     let new_state = WindowState {
       title: DEFAULT_WINDOW_TITLE.to_string(),
@@ -408,6 +432,7 @@ pub(crate) fn open_new_window(
   }
 
   // Apply stored notification count to the new window
+  #[cfg(not(target_os = "android"))]
   if let Some(state) = app.try_state::<AppState>() {
     if let Ok(app_state) = state.lock() {
       crate::tray::set_notifications_count(

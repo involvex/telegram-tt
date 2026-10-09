@@ -26,19 +26,23 @@ impl Deeplink {
           info!("Error emitting deeplink event: {:?}", err);
         }
 
-        // Request user attention and focus the window
-        if let Err(err) = window.request_user_attention(Some(UserAttentionType::Informational)) {
-          info!("Error requesting user attention: {:?}", err);
+        // Request user attention and focus the window (desktop only)
+        #[cfg(not(target_os = "android"))]
+        {
+          if let Err(err) = window.request_user_attention(Some(UserAttentionType::Informational)) {
+            info!("Error requesting user attention: {:?}", err);
+          }
+
+          if let Err(err) = window.show() {
+            info!("Error showing window: {:?}", err);
+          }
+
+          if let Err(err) = window.unminimize() {
+            info!("Error unminimizing window: {:?}", err);
+          }
         }
 
-        if let Err(err) = window.show() {
-          info!("Error showing window: {:?}", err);
-        }
-
-        if let Err(err) = window.unminimize() {
-          info!("Error unminimizing window: {:?}", err);
-        }
-
+        #[cfg(not(target_os = "android"))]
         if let Err(err) = window.set_focus() {
           info!("Error setting focus: {:?}", err);
         }

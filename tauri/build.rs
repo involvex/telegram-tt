@@ -14,7 +14,12 @@ fn load_dotenv() {
       if let Some((key, value)) = line.split_once('=') {
         let key = key.trim();
         let value = value.trim();
-        std::env::set_var(key, value);
+        // SAFETY: Setting environment variables from a .env file in build script.
+        // This is safe because we control the source (local .env file) and it's
+        // only used during build configuration, not at runtime.
+        unsafe {
+          std::env::set_var(key, value);
+        }
       }
     }
   }
@@ -23,6 +28,9 @@ fn load_dotenv() {
 fn main() {
   load_dotenv();
 
+  // On Android, desktop-only commands are excluded from the invoke handler in lib.rs,
+  // but we still need to list them here for Tauri's build script.
+  // The actual availability is controlled by #[cfg] attributes on the command functions.
   tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
     tauri_build::AppManifest::new().commands(&[
       "mark_title_bar_overlay",
