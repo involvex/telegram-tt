@@ -104,6 +104,7 @@ pub(crate) fn save_window_url(app: &tauri::AppHandle, window_label: &str) {
   }
 }
 
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   let app = tauri::Builder::default()
     .plugin(tauri_plugin_os::init())
@@ -342,14 +343,15 @@ pub(crate) fn open_new_window(
   app: tauri::AppHandle,
   url: String,
 ) -> Result<tauri::WebviewWindow, String> {
-  let base_url = Url::parse(BASE_URL).map_err(|err| format!("Invalid base URL: {err}"))?;
   let url = if BASE_URL.is_empty() {
+    // On mobile the frontend is bundled in assets, so there is no base URL to validate against
     if url.is_empty() {
       "index.html".to_string()
     } else {
       url
     }
   } else {
+    let base_url = Url::parse(BASE_URL).map_err(|err| format!("Invalid base URL: {err}"))?;
     resolve_app_url(&url, &base_url).ok_or_else(|| format!("Disallowed app URL: {url}"))?.to_string()
   };
   let window_label = Uuid::new_v4().to_string();
