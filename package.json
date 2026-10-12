@@ -13,6 +13,7 @@
     "build:staging": "cross-env APP_ENV=staging bun run build:dev",
     "build:mocked": "cross-env APP_ENV=test APP_MOCKED_CLIENT=1 bun run build:dev",
     "build:production": "vite build",
+    "android:sync-assets": "node ./dev/syncAndroidAssets.js",
     "build:stats": "cross-env BUNDLE_STATS=1 vite build",
     "build:stats:visualizer": "cross-env BUNDLE_STATS_VISUALIZER=1 vite build",
     "web:release:production": "bun i && bun run build:production && git add -A && git commit -a -m '[Build]' --no-verify && git push",

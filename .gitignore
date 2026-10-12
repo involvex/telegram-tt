@@ -15,6 +15,9 @@ dev/perf/screenshot*
 dist/*
 .cline
 
+# Generated Tauri Android web assets (mirrored from dist/ via `bun run android:sync-assets`)
+tauri/gen/android/app/src/main/assets/*
+
 # Local HTTPS certs (bunx mkcert)
 certs/
 public/dev-ca.crt
