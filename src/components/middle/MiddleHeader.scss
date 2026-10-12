@@ -5,7 +5,7 @@
 
   position: absolute;
   z-index: var(--z-middle-header);
-  top: 0;
+  top: env(safe-area-inset-top);
   right: 0;
   left: 0;
 
@@ -14,9 +14,15 @@
   align-items: center;
 
   width: calc(100% - var(--middle-panel-inline-padding) * 2);
-  max-width: calc(var(--messages-container-width) - var(--middle-panel-inline-padding) * 2);
+  max-width: calc(
+    var(--messages-container-width) - var(--middle-panel-inline-padding) * 2
+  );
   height: var(--middle-header-height);
-  margin: calc(var(--middle-panel-inline-padding) + var(--middle-header-player-height, 0px)) auto 0;
+  margin: calc(
+      var(--middle-panel-inline-padding) +
+        var(--middle-header-player-height, 0px)
+    )
+    auto 0;
   padding-top: 0.25rem;
   padding-right: max(0.25rem, env(safe-area-inset-right));
   padding-bottom: 0.25rem;
@@ -27,7 +33,9 @@
   box-shadow: var(--shadow-pane);
 
   /* stylelint-disable-next-line plugin/no-low-performance-animation-properties */
-  transition: var(--header-transform-transition), margin-top var(--top-stack-transition);
+  transition:
+    var(--header-transform-transition),
+    margin-top var(--top-stack-transition);
 
   body.no-page-transitions & {
     transition: none !important;
@@ -330,7 +338,9 @@
   }
 
   @media (min-width: 1276px) {
-    width: calc(100% - var(--right-column-width) - var(--middle-panel-inline-padding) * 2);
+    width: calc(
+      100% - var(--right-column-width) - var(--middle-panel-inline-padding) * 2
+    );
     #Main.right-column-open & {
       transform: translate3d(calc(var(--right-column-width) / -2), 0, 0);
     }
