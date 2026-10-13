@@ -1549,6 +1549,10 @@
 "PasscodeBiometricDescription" = "Use your fingerprint or face instead of typing the passcode.";
 "PasscodeBiometricEnable" = "Enable Biometric Unlock";
 "PasscodeBiometricDisable" = "Disable Biometric Unlock";
+"PasscodeBiometricChecking" = "Checking biometric availability...";
+"PasscodeBiometricCheckingInfo" = "Please wait while we check if biometric unlock is available on your device.";
+"PasscodeBiometricUnavailable" = "Biometric Unlock Unavailable";
+"PasscodeBiometricUnavailableInfo" = "Your device doesn't support biometric authentication or no biometrics are enrolled. Set up fingerprint or face recognition in your device settings to use this feature.";
 "PasscodeLockScreenTitle" = "Lock Screen";
 "PasscodeKeepBackground" = "Keep Background";
 "PasscodeKeepBackgroundInfo" = "Show your background image on the lock screen";

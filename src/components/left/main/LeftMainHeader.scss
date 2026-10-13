@@ -1,8 +1,11 @@
 @use "../../../styles/mixins";
 
+.LeftMainHeader {
+  padding-top: env(safe-area-inset-top);
+}
+
 #LeftMainHeader {
   position: relative;
-  margin-top: env(safe-area-inset-top);
 
   .main-menu {
     width: 2.5rem;

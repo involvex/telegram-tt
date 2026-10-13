@@ -1265,6 +1265,10 @@ export interface LangPair {
   'PasscodeBiometricDescription': undefined;
   'PasscodeBiometricEnable': undefined;
   'PasscodeBiometricDisable': undefined;
+  'PasscodeBiometricChecking': undefined;
+  'PasscodeBiometricCheckingInfo': undefined;
+  'PasscodeBiometricUnavailable': undefined;
+  'PasscodeBiometricUnavailableInfo': undefined;
   'PasscodeLockScreenTitle': undefined;
   'PasscodeKeepBackground': undefined;
   'PasscodeKeepBackgroundInfo': undefined;
