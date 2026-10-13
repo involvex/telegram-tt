@@ -114,6 +114,7 @@ export const INITIAL_SHARED_STATE: SharedState = {
     shouldAllowHttpTransport: true,
     shouldWarnAboutFiles: true,
     shouldKeepLockScreenBackground: true,
+    biometricUnlockEnabled: false,
   },
   isInitial: true,
 };

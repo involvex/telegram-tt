@@ -1,10 +1,12 @@
-import { memo, useMemo } from '../../../../lib/teact/teact';
+import { memo, useEffect, useMemo, useState } from '../../../../lib/teact/teact';
 import { getActions, withGlobal } from '../../../../global';
 
 import type { IRadioOption } from '../../../ui/RadioGroup';
 import { SettingsScreens } from '../../../../types';
 
+import { IS_TAURI } from '../../../../util/browser/globalEnvironment';
 import { IS_WEBAUTHN_SUPPORTED } from '../../../../util/browser/windowEnvironment';
+import { getBiometricStatus, isBiometricAvailable } from '../../../../util/tauri/biometric';
 import { LOCAL_TGS_URLS } from '../../../common/helpers/animatedAssets';
 
 import useHistoryBack from '../../../../hooks/useHistoryBack';
@@ -28,26 +30,30 @@ type OwnProps = {
 
 type StateProps = {
   autolockDuration?: number;
+  hasPasscode?: boolean;
   hasPasskey?: boolean;
   isLoading?: boolean;
   shouldKeepBackground: boolean;
+  biometricUnlockEnabled: boolean;
 };
 
 const AUTOLOCK_DURATIONS_MS = {
   disabled: 0,
   oneMinute: 60 * 1000,
   fiveMinutes: 5 * 60 * 1000,
+  fifteenMinutes: 15 * 60 * 1000,
   thirtyMinutes: 30 * 60 * 1000,
   oneHour: 60 * 60 * 1000,
 };
 
 const SettingsPasscodeEnabled = ({
-  isActive, autolockDuration, hasPasskey, isLoading, shouldKeepBackground, onReset,
+  isActive, autolockDuration, hasPasscode, hasPasskey, isLoading, shouldKeepBackground, biometricUnlockEnabled, onReset,
 }: OwnProps & StateProps) => {
   const {
     openSettingsScreen,
     setPasscodeAutolockDuration,
     setPasscodeKeepBackground,
+    setSharedSettingOption,
   } = getActions();
 
   const oldLang = useOldLang();
@@ -55,10 +61,24 @@ const SettingsPasscodeEnabled = ({
 
   useHistoryBack({ isActive, onBack: onReset });
 
+  const [isBiometricReady, setIsBiometricReady] = useState(false);
+
+  useEffect(() => {
+    if (!IS_TAURI) return undefined;
+
+    getBiometricStatus().then((status) => {
+      setIsBiometricReady(isBiometricAvailable(status));
+    }).catch(() => undefined);
+    return undefined;
+  }, []);
+
+  const isBiometricActive = biometricUnlockEnabled && hasPasskey;
+
   const autolockOptions = useMemo((): IRadioOption[] => [
     { value: String(AUTOLOCK_DURATIONS_MS.disabled), label: lang('PasscodeAutoLockDisabled') },
     { value: String(AUTOLOCK_DURATIONS_MS.oneMinute), label: lang('PasscodeAutoLock1Min') },
     { value: String(AUTOLOCK_DURATIONS_MS.fiveMinutes), label: lang('PasscodeAutoLock5Min') },
+    { value: String(AUTOLOCK_DURATIONS_MS.fifteenMinutes), label: lang('PasscodeAutoLock15Min') },
     { value: String(AUTOLOCK_DURATIONS_MS.thirtyMinutes), label: lang('PasscodeAutoLock30Min') },
     { value: String(AUTOLOCK_DURATIONS_MS.oneHour), label: lang('PasscodeAutoLock1Hour') },
   ], [lang]);
@@ -73,6 +93,18 @@ const SettingsPasscodeEnabled = ({
         ? SettingsScreens.PasscodePasskeyRemoveConfirm
         : SettingsScreens.PasscodePasskeyAddConfirm,
     });
+  });
+
+  const handleBiometricClick = useLastCallback(() => {
+    if (isBiometricActive) {
+      setSharedSettingOption({ biometricUnlockEnabled: false });
+      openSettingsScreen({ screen: SettingsScreens.PasscodePasskeyRemoveConfirm });
+    } else {
+      setSharedSettingOption({ biometricUnlockEnabled: true });
+      if (!hasPasskey) {
+        openSettingsScreen({ screen: SettingsScreens.PasscodePasskeyAddConfirm });
+      }
+    }
   });
 
   const handleKeepBackgroundToggle = useLastCallback((isChecked: boolean) => {
@@ -129,6 +161,32 @@ const SettingsPasscodeEnabled = ({
         </>
       )}
 
+      {IS_TAURI && isBiometricReady && (
+        <>
+          <IslandTitle dir={lang.isRtl ? 'rtl' : undefined}>
+            {lang('PasscodeBiometricTitle')}
+          </IslandTitle>
+          <Island>
+            <Button
+              className="settings-button"
+              color={isBiometricActive ? 'danger' : 'primary'}
+              iconName={isBiometricActive ? 'delete' : 'lock'}
+              isText
+              disabled={isLoading}
+              noForcedUpperCase
+              onClick={handleBiometricClick}
+            >
+              {lang(
+                isBiometricActive ? 'PasscodeBiometricDisable' : 'PasscodeBiometricEnable',
+              )}
+            </Button>
+          </Island>
+          <IslandDescription dir={lang.isRtl ? 'rtl' : undefined}>
+            {lang('PasscodeBiometricDescription')}
+          </IslandDescription>
+        </>
+      )}
+
       <IslandTitle dir={lang.isRtl ? 'rtl' : undefined}>{lang('PasscodeLockScreenTitle')}</IslandTitle>
       <Island>
         <Checkbox
@@ -157,9 +215,11 @@ export default memo(withGlobal<OwnProps>(
   (global): Complete<StateProps> => {
     return {
       autolockDuration: global.passcode.autolockDuration,
+      hasPasscode: global.passcode.hasPasscode,
       hasPasskey: global.passcode.hasPasskey,
       isLoading: global.passcode.isLoading,
       shouldKeepBackground: global.sharedState.settings.shouldKeepLockScreenBackground,
+      biometricUnlockEnabled: global.sharedState.settings.biometricUnlockEnabled ?? false,
     };
   },
 )(SettingsPasscodeEnabled));

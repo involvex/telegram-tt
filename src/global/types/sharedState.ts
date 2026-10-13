@@ -37,4 +37,5 @@ export interface SharedSettings {
   shouldWarnAboutFiles?: boolean;
   shouldSkipBrowserCloseConfirmation: boolean;
   shouldKeepLockScreenBackground: boolean;
+  biometricUnlockEnabled?: boolean;
 }

@@ -1537,6 +1537,7 @@
 "SettingsPasscodeStart2" = "Note: if you forget your local passcode, you'll need to log out.";
 "PasscodeTooManyAttempts" = "Too many attempts. Please try again later.";
 "PasscodeUsePasskey" = "Unlock with Passkey";
+"PasscodeUseBiometrics" = "Unlock with Biometrics";
 "PasscodePasskeyTitle" = "Passkey";
 "PasscodePasskeyName" = "Local Passcode";
 "PasscodePasskeyEnable" = "Set Up Passkey";
@@ -1544,6 +1545,10 @@
 "PasscodePasskeyError" = "Passkey unlock failed. Please use your passcode.";
 "PasscodePasskeyUnsupported" = "Your device or browser does not support passkey unlock.";
 "PasscodePasskeyRemovedChange" = "Your passkey was removed because the passcode changed. Add it again to keep using passkey unlock.";
+"PasscodeBiometricTitle" = "Biometric Unlock";
+"PasscodeBiometricDescription" = "Use your fingerprint or face instead of typing the passcode.";
+"PasscodeBiometricEnable" = "Enable Biometric Unlock";
+"PasscodeBiometricDisable" = "Disable Biometric Unlock";
 "PasscodeLockScreenTitle" = "Lock Screen";
 "PasscodeKeepBackground" = "Keep Background";
 "PasscodeKeepBackgroundInfo" = "Show your background image on the lock screen";
@@ -1551,6 +1556,7 @@
 "PasscodeAutoLockDisabled" = "Disabled";
 "PasscodeAutoLock1Min" = "If away for 1 minute";
 "PasscodeAutoLock5Min" = "If away for 5 minutes";
+"PasscodeAutoLock15Min" = "If away for 15 minutes";
 "PasscodeAutoLock30Min" = "If away for 30 minutes";
 "PasscodeAutoLock1Hour" = "If away for 1 hour";
 "PasscodeDataCorrupted" = "Your encrypted data could not be restored. To continue using Telegram, log out of all accounts and log in again.";

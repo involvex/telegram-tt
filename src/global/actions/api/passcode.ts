@@ -222,6 +222,7 @@ addActionHandler('clearPasscode', async (global, actions): Promise<void> => {
   global = getGlobal();
   global = clearPasscodeSettings(global);
   setGlobal(global);
+  actions.setSharedSettingOption({ biometricUnlockEnabled: false });
   forceUpdateCache();
   actions.openSettingsScreen({ screen: SettingsScreens.Privacy, tabId: getCurrentTabId() });
 });

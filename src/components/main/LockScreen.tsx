@@ -3,8 +3,10 @@ import { getActions, withGlobal } from '../../global';
 
 import type { GlobalState } from '../../global/types';
 
+import { IS_TAURI } from '../../util/browser/globalEnvironment';
 import { IS_WEBAUTHN_SUPPORTED } from '../../util/browser/windowEnvironment';
 import { cancelConditionalPasskeyRequest } from '../../util/passcode/passkey';
+import { getBiometricStatus, isBiometricAvailable } from '../../util/tauri/biometric';
 import { LOCAL_TGS_URLS } from '../common/helpers/animatedAssets';
 
 import useTimeout from '../../hooks/schedulers/useTimeout';
@@ -31,6 +33,7 @@ export type OwnProps = {
 type StateProps = {
   passcodeSettings: GlobalState['passcode'];
   shouldKeepBackground: boolean;
+  biometricUnlockEnabled: boolean;
 };
 
 const ICON_SIZE = 160;
@@ -39,6 +42,7 @@ const LockScreen = ({
   isLocked,
   passcodeSettings,
   shouldKeepBackground,
+  biometricUnlockEnabled,
 }: OwnProps & StateProps) => {
   const {
     unlockScreen,
@@ -58,6 +62,7 @@ const LockScreen = ({
 
   const lang = useLang();
   const [shouldShowPasscode, setShouldShowPasscode] = useState(false);
+  const [isBiometricReady, setIsBiometricReady] = useState(false);
   const [isSignOutAllDialogOpen, openSignOutAllConfirmation, closeSignOutAllConfirmation] = useFlag(false);
   const { shouldRender } = useShowTransitionDeprecated(isLocked);
 
@@ -67,6 +72,15 @@ const LockScreen = ({
     unlockScreenWithPasskey({ isConditional: true });
     return cancelConditionalPasskeyRequest;
   }, [hasPasskey, isDataCorrupted, isLoading, isLocked]);
+
+  useEffect(() => {
+    if (!IS_TAURI || !biometricUnlockEnabled || !hasPasskey) return undefined;
+
+    getBiometricStatus().then((status) => {
+      setIsBiometricReady(isBiometricAvailable(status));
+    }).catch(() => undefined);
+    return undefined;
+  }, [biometricUnlockEnabled, hasPasskey]);
 
   const handleInvalidAttemptsTimeout = useLastCallback(() => {
     if (!timeoutUntil) return;
@@ -85,6 +99,10 @@ const LockScreen = ({
   });
 
   const handlePasskeyClick = useLastCallback(() => {
+    unlockScreenWithPasskey();
+  });
+
+  const handleBiometricClick = useLastCallback(() => {
     unlockScreenWithPasskey();
   });
 
@@ -174,6 +192,18 @@ const LockScreen = ({
           </Button>
         )}
 
+        {IS_TAURI && biometricUnlockEnabled && hasPasskey && isBiometricReady && (
+          <Button
+            color="translucent"
+            isText
+            className={styles.passkeyButton}
+            disabled={isLoading}
+            onClick={handleBiometricClick}
+          >
+            {lang('PasscodeUseBiometrics')}
+          </Button>
+        )}
+
         {renderLogoutPrompt()}
       </div>
     );
@@ -204,6 +234,7 @@ export default memo(withGlobal<OwnProps>(
     return {
       passcodeSettings: global.passcode,
       shouldKeepBackground: global.sharedState.settings.shouldKeepLockScreenBackground,
+      biometricUnlockEnabled: global.sharedState.settings.biometricUnlockEnabled ?? false,
     };
   },
 )(LockScreen));

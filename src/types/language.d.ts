@@ -1253,6 +1253,7 @@ export interface LangPair {
   'SettingsPasscodeStart2': undefined;
   'PasscodeTooManyAttempts': undefined;
   'PasscodeUsePasskey': undefined;
+  'PasscodeUseBiometrics': undefined;
   'PasscodePasskeyTitle': undefined;
   'PasscodePasskeyName': undefined;
   'PasscodePasskeyEnable': undefined;
@@ -1260,6 +1261,10 @@ export interface LangPair {
   'PasscodePasskeyError': undefined;
   'PasscodePasskeyUnsupported': undefined;
   'PasscodePasskeyRemovedChange': undefined;
+  'PasscodeBiometricTitle': undefined;
+  'PasscodeBiometricDescription': undefined;
+  'PasscodeBiometricEnable': undefined;
+  'PasscodeBiometricDisable': undefined;
   'PasscodeLockScreenTitle': undefined;
   'PasscodeKeepBackground': undefined;
   'PasscodeKeepBackgroundInfo': undefined;
@@ -1267,6 +1272,7 @@ export interface LangPair {
   'PasscodeAutoLockDisabled': undefined;
   'PasscodeAutoLock1Min': undefined;
   'PasscodeAutoLock5Min': undefined;
+  'PasscodeAutoLock15Min': undefined;
   'PasscodeAutoLock30Min': undefined;
   'PasscodeAutoLock1Hour': undefined;
   'PasscodeDataCorrupted': undefined;

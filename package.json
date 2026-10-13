@@ -13,7 +13,7 @@
     "build:staging": "cross-env APP_ENV=staging bun run build:dev",
     "build:mocked": "cross-env APP_ENV=test APP_MOCKED_CLIENT=1 bun run build:dev",
     "build:production": "vite build",
-    "android:sync-assets": "node ./dev/syncAndroidAssets.js",
+    "android:sync-assets": "bun ./dev/syncAndroidAssets.js",
     "build:stats": "cross-env BUNDLE_STATS=1 vite build",
     "build:stats:visualizer": "cross-env BUNDLE_STATS_VISUALIZER=1 vite build",
     "web:release:production": "bun i && bun run build:production && git add -A && git commit -a -m '[Build]' --no-verify && git push",
@@ -113,6 +113,7 @@
   "dependencies": {
     "@cryptography/aes": "^0.1.1",
     "@tauri-apps/api": "2.12.0",
+    "@tauri-apps/plugin-biometric": "2.4.2",
     "@tauri-apps/plugin-notification": "2.5.0",
     "@tauri-apps/plugin-process": "2.4.0",
     "@tauri-apps/plugin-shell": "2.4.0",

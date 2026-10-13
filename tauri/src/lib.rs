@@ -115,6 +115,10 @@ pub fn run() {
     .plugin(tauri_plugin_deep_link::init())
     .plugin(tauri_plugin_process::init());
 
+  // tauri-plugin-biometric is mobile-only (empty crate on desktop)
+  #[cfg(mobile)]
+  let app = app.plugin(tauri_plugin_biometric::init());
+
   #[cfg(not(target_os = "android"))]
   let app = app.plugin(tauri_plugin_window_state::Builder::default().build());
 
